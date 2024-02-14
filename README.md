@@ -21,7 +21,7 @@ Following that, run
   flask run
 ```
 
-and navigate the the address in your web browser shown in the terminal. You can now upload files and they will appear in the private Discord server your bot has been invited to.
+and navigate to the address in your web browser shown in the terminal. You can now upload files and they will appear in the private Discord server your bot has been invited to.
 ## Documentation
 This program was written for an article on XDA-Developers by Adam Conway, Lead Technical Editor of the site.
 

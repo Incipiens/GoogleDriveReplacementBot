@@ -41,7 +41,7 @@ def upload_file():
 
 async def send_file_to_discord(file):
     print("Sending file to Discord:", file.filename)
-    channel = client.get_channel(1207125176852938764)  # Replace with channel ID
+    channel = client.get_channel()  # Replace with channel ID
     message = await channel.send(file=discord.File(file.stream, filename=file.filename))
     print(message)
 
