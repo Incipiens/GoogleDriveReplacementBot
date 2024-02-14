@@ -1,10 +1,8 @@
 
 # Using Discord as cloud storage
-Discord is a popular social media application that gives users the ability to share files with other users. There is a file limit of 25MB for users who aren't subscribed to the service's subscription tier, dubbed Nitro. This program is a proof of concept made that shows how a user can leverage Discord's file sharing abilities to turn a private server into a cloud storage provider with ease, complete with the ability to split files under the 25MB limit and stitch them back together again.
+Discord is a popular social media application that gives users the ability to share files with other users. There is a file limit of 25MB for users who aren't subscribed to the service's subscription tier, dubbed Nitro. This program shows how a user can leverage Discord's file sharing abilities to turn a private server into a cloud storage provider with ease, complete with the ability to split files under the 25MB limit and stitch them back together again.
 
-This is a proof of concept and should be used as a legitimate replacement for Google Drive. Users should also not use this to store sensitive files.
-
-
+This is a proof of concept and should not be used as a legitimate replacement for Google Drive. Users should also not use this to store sensitive files.
 
 
 ## Deployment
