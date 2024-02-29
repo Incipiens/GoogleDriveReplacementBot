@@ -1,7 +1,9 @@
-partstostitch/aduhm.mp4
-partstostitch/aduhm.part1
-partstostitch/aduhm.part2
-partstostitch/aduhm.part3
-partstostitch/aduhm.part4
-partstostitch/aduhm.part5
-partstostitch/aduhm.part6
+partstostitch
+.env
+__pycache__/
+.idea/
+venv/
+.vscode/
+db.json
+.DS_Store
+**/.DS_Store
