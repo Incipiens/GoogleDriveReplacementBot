@@ -1,144 +1,40 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <!-- Material Design Lite -->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
-        <link rel="stylesheet" href="https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css">
-        <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-        <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-        <style>
-            .page-content {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                flex-direction: column;
-            }
-            
-            .drop-zone {
-                cursor: pointer;
-                padding: 20px;
-                border: 2px dashed #009688;
-                color: #009688;
-                font-weight: bold;
-                text-align: center;
-                margin: 20px;
-                position: relative;
-                overflow: hidden;
-            }
-            
-            .drop-zone:hover {
-                background-color: #E0F2F1;
-            }
-            
-            .file-name {
-                margin-top: 20px;
-            }
-            </style>
-    </head>
+<html lang="en">
 
-    <body>
-        <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-            <main class="mdl-layout__content">
-                <div class="page-content">
-                    <div id="drop_zone" class="drop-zone mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
-                        Drop file here or click to upload
-                        <input type="file" id="fileInput" hidden onchange="handleFileSelect(event)">
-                    </div>
-                    <span id="fileName" class="file-name"></span>
-                </div>
-            </main>
-        </div>
-
-    <script>
-        document.getElementById('drop_zone').addEventListener('click', function() {
-            document.getElementById('fileInput').click();
-        });
-
-        function handleFileSelect(event) {
-            event.stopPropagation();
-            event.preventDefault();
-
-            // Support both drop and file input change events
-            var file = event.target.files ? event.target.files[0] : event.dataTransfer.files[0];
-            document.getElementById('fileName').textContent = 'Preparing: ' + file.name;
-
-            // Define chunk size
-            let chunkSize = 20 * 1024 * 1024; // 20 MB, as non-Nitro users only get 25MB each
-
-            // Split file if necessary and upload
-            if (file.size > chunkSize) {
-                let parts = splitFile(file, chunkSize);
-                uploadParts(parts, file.name);
-            } else {
-                // File does not need to be split
-                uploadFile(file);
-            }
+<head>
+    <title>Google Drive Replacement Bot</title>
+    <!-- Material Design Lite -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <style>
+        .page-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
         }
+    </style>
+</head>
 
-        function splitFile(file, chunkSize) {
-            let parts = [];
-            let size = file.size;
-            for(let i = 0; i < size; i += chunkSize) {
-                let part = file.slice(i, Math.min(size, i + chunkSize));
-                parts.push(part);
-            }
-            return parts;
-        }
-
-        function uploadParts(parts, originalFileName) {
-            parts.forEach((part, index) => {
-                let formData = new FormData();
-                formData.append('file', part, `${originalFileName}.part${index + 1}`);
-                // Upload part
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log(`Part ${index + 1} uploaded: `, data);
-                    document.getElementById('fileName').textContent = `Uploaded part ${index + 1} of ${parts.length}`;
-                    // Handle success response, maybe update progress UI in future version. This is currently bugged and shows the most recently uploaded part instead
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('fileName').textContent = 'Error uploading part ' + (index + 1);
-                    // Handle errors here, such as displaying a notification to the user
-                });
-            });
-        }
-
-        function uploadFile(file) {
-            var formData = new FormData();
-            formData.append('file', file, file.name);
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                document.getElementById('fileName').textContent = 'Uploaded: ' + file.name;
-                // Handle success response, update UI or alert the user. 
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('fileName').textContent = 'Error uploading file';
-                // Handle errors here, such as displaying a notification to the user
-            });
-        }
-
-        var dropZone = document.getElementById('drop_zone');
-        dropZone.addEventListener('dragover', function(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            event.dataTransfer.dropEffect = 'copy';
-        });
-
-        dropZone.addEventListener('drop', handleFileSelect);
-        </script>
-
+<body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <main class="mdl-layout__content">
+            <div class="page-content">
+                <a href="/upload"
+                    class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+                    Upload
+                </a>
+                <br />
+                <a href="/download"
+                    class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+                    Download
+                </a>
+            </div>
+        </main>
+    </div>
 </body>
+
 </html>
