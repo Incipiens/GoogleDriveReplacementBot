@@ -22,6 +22,7 @@ MarkupSafe==2.1.5
 mdurl==0.1.2
 multidict==6.0.5
 Pygments==2.17.2
+python-dotenv==1.0.1
 python-nmap==0.7.1
 requests==2.31.0
 rich==13.7.0

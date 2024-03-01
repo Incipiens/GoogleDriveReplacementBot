@@ -13,7 +13,14 @@ To deploy this project you'll need to install the dependencies included in the r
   pip install -r requirements.txt
 ```
 
-Replace the client token and the channel ID in app.py with your client token and your channel ID. If you don't have a Discord bot made and invited to a server already, you will need to do so.
+If you don't have a Discord bot made and invited to a server already, you will need to do so.
+
+Create a file called `.env` and add the following to it:
+
+```env
+DISCORD_TOKEN=your_discord_token
+DISCORD_CHANNEL=your_discord_channel_id
+```
 
 Following that, run
 
