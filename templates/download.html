@@ -72,43 +72,9 @@
 			}
 			
 			function downloadFile(filename) {
-				fetch('/downloadFile/' + encodeURIComponent(filename)).then(response => response.blob()).then(blob => blob.text()).then(data => {
+				fetch('/downloadFile/' + encodeURIComponent(filename)).then(response => response.blob()).then(blob => blob.arrayBuffer()).then(data => {
 					if (document.getElementById('secretKey').value != "") {
-						let keyJson = {
-							"alg": "A256GCM",
-							"ext": true,
-							"k": document.getElementById('secretKey').value,
-							"key_ops": ["encrypt", "decrypt"],
-							"kty": "oct"
-						}
-						crypto.subtle.importKey("jwk", keyJson, {
-								name: "AES-GCM",
-							}, true,
-							["encrypt", "decrypt"]).then(key => {
-							let iv = data.slice(0, 12);
-							let ivBuffer = new Uint8Array(iv.split('').map(byte => byte.charCodeAt(0))).buffer;
-							let encryptedData = data.slice(12);
-							let encryptedDataBuffer = new Uint8Array(encryptedData.split('').map(x => x.charCodeAt(0))).buffer;
-							window.crypto.subtle.decrypt({
-								name: "AES-GCM",
-								iv: ivBuffer
-							}, key, encryptedDataBuffer).then(decryptedData => {
-								let blob2 = new Blob([decryptedData], {
-									type: 'application/octet-stream'
-								}); // Create a Blob from the decrypted data
-								// Create a download link and click it to start the download
-								let a = document.createElement('a');
-								a.href = window.URL.createObjectURL(blob2);
-								a.download = filename;
-								a.click();
-							}).catch(error => {
-								console.error('Error:', error);
-								// Handle errors here, such as displaying a notification to the user
-							});
-						}).catch(error => {
-							console.error('Error:', error);
-							// Handle errors here, such as displaying a notification to the user
-						});
+						// todo: make it work
 					} else {
 						let decryptedData = data;
 						let blob2 = new Blob([decryptedData], {
