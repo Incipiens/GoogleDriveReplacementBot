@@ -74,7 +74,33 @@
 			function downloadFile(filename) {
 				fetch('/downloadFile/' + encodeURIComponent(filename)).then(response => response.blob()).then(blob => blob.arrayBuffer()).then(data => {
 					if (document.getElementById('secretKey').value != "") {
-						// todo: make it work
+						let iv = new Uint8Array(data.slice(0, 12));
+                        let realData = data.slice(12);
+                        window.crypto.subtle.importKey("jwk", {
+							"alg": "A256GCM",
+							"ext": true,
+							"k": document.getElementById('secretKey').value,
+							"key_ops": ["encrypt", "decrypt"],
+							"kty": "oct"
+						}, "AES-GCM", true, ["encrypt", "decrypt"]).then(key => {
+                            window.crypto.subtle.decrypt({
+                                name: "AES-GCM",
+                                iv: iv
+                            }, key, realData).then(decryptedData => {
+                                let blob2 = new Blob([decryptedData], {
+                                    type: 'application/octet-stream'
+                                }); // Create a Blob from the decrypted data
+                                // Create a download link and click it to start the download
+                                let a = document.createElement('a');
+                                a.href = window.URL.createObjectURL(blob2);
+                                a.download = filename;
+                                a.click();
+                            }).catch(error => {
+                                console.error('Error during decryption:', error);
+                            });
+                        }).catch(error => {
+                            console.error('Error during key import:', error);
+                        });
 					} else {
 						let decryptedData = data;
 						let blob2 = new Blob([decryptedData], {
@@ -87,9 +113,8 @@
 						a.click();
 					}
 				}).catch(error => {
-					console.error('Error:', error);
-					// Handle errors here, such as displaying a notification to the user
-				});
+                    console.error('Error during file download:', error);
+                });
 			}
 		</script>
 	</body>

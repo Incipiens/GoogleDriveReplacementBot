@@ -75,7 +75,11 @@
 					window.crypto.subtle.exportKey('jwk', key).then(keyText => {
 						console.log(keyText);
 						document.getElementById('secretKey').value = keyText.k;
+					}).catch(error => {
+						console.error('Error:', error);
 					});
+				}).catch(error => {
+					console.error('Error:', error);
 				});
 			});
 			document.getElementById('downloadKeyButton').addEventListener('click', function () {
@@ -143,7 +147,11 @@
 								} else {
 									uploadFile(encryptedBlob, file.name);
 								}
+							}).catch(error => {
+								console.error('Error during encryption:', error);
 							});
+						}).catch(error => {
+							console.error('Error during key import:', error);
 						});
 					} else {
 						// Use unencrypted file
@@ -158,6 +166,8 @@
 							uploadFile(encryptedBlob, file.name);
 						}
 					}
+				}).catch(error => {
+					console.error('Error during file import:', error);
 				});
 			}
 			
