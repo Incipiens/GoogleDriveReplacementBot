@@ -85,23 +85,26 @@
 
         document.getElementById('generateKeyButton').addEventListener('click', function () {
             // Generate random key
-            let secretKey = generateRandomKey();
-            document.getElementById('secretKey').value = secretKey;
+            let key = window.crypto.subtle.generateKey({
+                    name: "AES-GCM",
+                    length: 256
+                },
+                true,
+                ["encrypt", "decrypt"]
+            )
+            .then(key => {
+                // Return key as text
+                window.crypto.subtle.exportKey('jwk', key)
+                    .then(keyText => {
+                        console.log(keyText);
+                        document.getElementById('secretKey').value = keyText.k;
+                    });
+            });
         });
-
-        function generateRandomKey() {
-            // Generate a random key of length 32 characters (128 bits)
-            let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            let randomKey = "";
-            for (let i = 0; i < 32; i++) {
-                randomKey += characters.charAt(Math.floor(Math.random() * characters.length));
-            }
-            return randomKey;
-        }
 
         document.getElementById('downloadKeyButton').addEventListener('click', function () {
             // Create a Blob with the key string
-            let blob = new Blob(document.getElementById('secretKey').value, {
+            let blob = new Blob([document.getElementById('secretKey').value], {
                 type: 'text/plain'
             });
 
@@ -122,7 +125,7 @@
             let reader = new FileReader();
             reader.onload = function (event) {
                 // Set the key in the input fields
-                document.getElementById('secretKey').value = event.targe.result;
+                document.getElementById('secretKey').value = event.target.result;
             };
             reader.readAsText(file);
         }
@@ -138,26 +141,85 @@
             // Define chunk size
             let chunkSize = 20 * 1024 * 1024; // 20 MB, as non-Nitro users only get 25MB each
 
-            // Encrypt the file before sending to server
-            let reader = new FileReader();
-            reader.onload = function (event) {
-                // Encrypt the content using AES
-                let fileContent = new TextDecoder().decode(event.target.result);
-                let encrypted = CryptoJS.AES.encrypt(fileContent, document.getElementById('secretKey').value);
-                let encryptedString = encrypted.toString();
-                // Create a new Blob with the encrypted content
-                let encryptedBlob = new Blob([encryptedString], {
-                    type: 'application/octet-stream'
+            // Read the file as an ArrayBuffer
+            file.arrayBuffer().then(fileBuffer => {
+                // Convert the ArrayBuffer to a Uint8Array
+                let fileData = new Uint8Array(fileBuffer);
+
+                window.crypto.subtle.importKey("jwk", {
+                    "alg": "A256GCM",
+                    "ext": true,
+                    "k": document.getElementById('secretKey').value,
+                    "key_ops": [
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "kty": "oct"
+                }, "AES-GCM", true, ["encrypt", "decrypt"]).then(key => {
+                    // Encrypt the file data using the generated key
+                    let iv = window.crypto.getRandomValues(new Uint8Array(12));
+                    console.log(iv);
+                    if (document.getElementById('secretKey').value != "") {
+                        window.crypto.subtle.encrypt({
+                                name: "AES-GCM",
+                                iv: iv
+                            },
+                            key,
+                            fileData
+                        ).then(encryptedData => {
+                            console.log(encryptedData)
+                            let encryptedBlob = new Blob([[...iv].map(x => String.fromCharCode(x)).join(""), new Uint8Array(encryptedData)], {
+                                type: 'application/octet-stream'
+                            });
+        
+                            if (encryptedBlob.size > chunkSize) {
+                                let parts = splitFile(encryptedBlob, chunkSize);
+                                uploadParts(parts, file.name);
+                            } else {
+                                uploadFile(encryptedBlob, file.name);
+                            }
+                        });
+                    } else {
+                        // Use unencrypted file
+                        let encryptedData = fileData;
+                        let encryptedBlob = new Blob([encryptedData], {
+                            type: 'application/octet-stream'
+                        });
+    
+                        if (encryptedBlob.size > chunkSize) {
+                            let parts = splitFile(encryptedBlob, chunkSize);
+                            uploadParts(parts, file.name);
+                        } else {
+                            uploadFile(encryptedBlob, file.name);
+                        }
+                    }
                 });
-                // Continue with the upload process using the encrypted file
-                if (encryptedBlob.size > chunkSize) {
-                    let parts = splitFile(encryptedBlob, chunkSize);
-                    uploadParts(parts, file.name);
-                } else {
-                    uploadFile(encryptedBlob, file.name);
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            });
+
+            // Encrypt the file before sending to server
+            // let reader = new FileReader();
+            // reader.onload = function (event) {
+            //     // Encrypt the content using AES
+            //     let fileContent = new TextDecoder().decode(event.target.result);
+            //     if (document.getElementById('secretKey').value != "") {
+            //         let encrypted = CryptoJS.AES.encrypt(fileContent, document.getElementById('secretKey').value);
+            //         let encryptedString = encrypted.toString();
+            //     } else {
+            //         let encryptedString = fileContent;
+            //     }
+            //     // Create a new Blob with the encrypted content
+            //     let encryptedBlob = new Blob([encryptedString], {
+            //         type: 'application/octet-stream'
+            //     });
+            //     // Continue with the upload process using the encrypted file
+            //     if (encryptedBlob.size > chunkSize) {
+            //         let parts = splitFile(encryptedBlob, chunkSize);
+            //         uploadParts(parts, file.name);
+            //     } else {
+            //         uploadFile(encryptedBlob, file.name);
+            //     }
+            // };
+            // reader.readAsArrayBuffer(file);
         }
 
         function splitFile(file, chunkSize) {
@@ -207,7 +269,7 @@
                 .then(data => {
                     console.log(data);
                     document.getElementById('fileName').textContent = 'Uploaded: ' +
-                    originalFileName; // Use the original file name
+                        originalFileName; // Use the original file name
                     // Handle success response, update UI or alert the user.
                 })
                 .catch(error => {

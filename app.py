@@ -75,9 +75,9 @@ def upload_file():
 
     # Increment the parts count for the uploaded file
     if filename in db_data['files']:
-        db_data['files'][filename]['parts'] += 1
+        db_data['files'][filename.split(".part")[0]]['parts'] += 1
     else:
-        db_data['files'][filename] = {'parts': 1}
+        db_data['files'][filename.split(".part")[0]] = {'parts': 1}
 
     # Write the updated data back to db.json
     with open('db.json', 'w') as db_file:
@@ -85,16 +85,22 @@ def upload_file():
 
     return jsonify({'message': 'File uploaded successfully!'})
 
-@app.route('/downloadFile/<filename>')
-def download_file(filename):
-    # Ensure the directory exists
-    os.makedirs('partstostitch', exist_ok=True)
+should_remove_files = False
 
-    # Remove the files from partstostich after finish
-    @app.teardown_request
-    def remove_files():
+@app.after_request
+def remove_files(response):
+    global should_remove_files
+    if should_remove_files:
         for file in os.listdir('partstostitch'):
             os.remove(os.path.join('partstostitch', file))
+        should_remove_files = False
+    return response
+
+@app.route('/downloadFile/<filename>')
+def download_file(filename):
+    global should_remove_files
+    # Ensure the directory exists
+    os.makedirs('partstostitch', exist_ok=True)
 
     # Ensure the Discord client is ready before attempting to fetch messages
     if not client.is_closed():
@@ -112,9 +118,11 @@ def download_file(filename):
                     with open(part_path, 'rb') as part_file:
                         merged_file.write(part_file.read())
                     os.remove(part_path)  # Remove the part file after merging
+            should_remove_files = True
             return send_from_directory('partstostitch', filename, as_attachment=True, mimetype='application/octet-stream')
         elif result == 1:
             # Only one file, no need to merge
+            should_remove_files = True
             return send_from_directory('partstostitch', filename, as_attachment=True, mimetype='application/octet-stream')
         else:
             # No files were downloaded
