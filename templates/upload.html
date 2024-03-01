@@ -73,7 +73,6 @@
 					["encrypt", "decrypt"]).then(key => {
 					// Return key as text
 					window.crypto.subtle.exportKey('jwk', key).then(keyText => {
-						console.log(keyText);
 						document.getElementById('secretKey').value = keyText.k;
 					}).catch(error => {
 						console.error('Error:', error);
@@ -129,15 +128,13 @@
 						}, "AES-GCM", true, ["encrypt", "decrypt"]).then(key => {
 							// Encrypt the file data using the generated key
 							let iv = window.crypto.getRandomValues(new Uint8Array(12));
-							console.log(iv);
 							window.crypto.subtle.encrypt({
 								name: "AES-GCM",
 								iv: iv
 							}, key, fileData).then(encryptedData => {
-								console.log(encryptedData)
 								let encryptedBlob = new Blob([
-									[...iv].map(x => String.fromCharCode(x)).join(""),
-									new Uint8Array(encryptedData)
+									iv,
+									encryptedData
 								], {
 									type: 'application/octet-stream'
 								});
@@ -208,7 +205,6 @@
 					method: 'POST',
 					body: formData,
 				}).then(response => response.json()).then(data => {
-					console.log(data);
 					document.getElementById('fileName').textContent = 'Uploaded: ' + originalFileName; // Use the original file name
 					// Handle success response, update UI or alert the user.
 				}).catch(error => {
